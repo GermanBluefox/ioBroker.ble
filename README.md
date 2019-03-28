@@ -2,7 +2,7 @@
 =================
 
 **Tests:** Linux/Mac: [![Build Status](https://travis-ci.org/AlCalzone/ioBroker.ble.svg?branch=master)](https://travis-ci.org/AlCalzone/ioBroker.ble) 
-Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/AlCalzone/ioBroker.ble?branch=master&svg=true)](https://ci.appveyor.com/project/AlCalzone/ioBroker-ble/)
+Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/AlCalzone/ioBroker.ble?branch=master&svg=true)](https://ci.appveyor.com/project/AlCalzone/ioBroker-ble/) [![Greenkeeper badge](https://badges.greenkeeper.io/AlCalzone/ioBroker.ble.svg)](https://greenkeeper.io/)
 
 ================
 
