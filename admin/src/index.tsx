@@ -78,6 +78,27 @@ const SettingsPageContent: React.FC = React.memo(() => {
 
 				<Grid item xs={4}>
 					<TextField
+						label={_("Use ble-gateway instance:")}
+						fullWidth={true}
+						InputLabelProps={{
+							// Avoid overlapping the text if it was filled out
+							shrink: true,
+						}}
+						placeholder="ble-gateway.0"
+						value={settings.gateway ?? ""}
+						onChange={(event) =>
+							handleChange("gateway", event.target.value)
+						}
+					/>
+					<Typography variant="body2">
+						{_(
+							"when configured, the advertisements come from the ble-gateway adapter, which shares one bluetooth adapter with other adapters",
+						)}
+					</Typography>
+				</Grid>
+
+				<Grid item xs={4}>
+					<TextField
 						label={_("Select device:")}
 						inputProps={{
 							type: "number",

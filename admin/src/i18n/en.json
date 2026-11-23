@@ -11,5 +11,7 @@
 	"Service characteristics as HEX codes or UUID, comma separated.": "Service characteristics as HEX codes or UUID, comma separated.",
 	"Settings": "Settings",
 	"Too frequent updates can slow down the admin.": "Too frequent updates can slow down the admin.",
-	"This will be automatically disabled after 5 minutes.": "This will be automatically disabled after 5 minutes."
+	"This will be automatically disabled after 5 minutes.": "This will be automatically disabled after 5 minutes.",
+	"Use ble-gateway instance:": "Use ble-gateway instance:",
+	"when configured, the advertisements come from the ble-gateway adapter, which shares one bluetooth adapter with other adapters": "when configured, the advertisements come from the ble-gateway adapter, which shares one bluetooth adapter with other adapters"
 }

@@ -23,6 +23,10 @@ which requires `libcap2-bin` to be installed.
 If you have multiple bluetooth devices on your system, select the one to use from the dropdown.
 In the textbox below, enter all UUIDs of the advertised services you want to record (as found in the nRF Connect app).
 
+### Sharing the bluetooth adapter with other adapters (ble-gateway)
+Only one process can use a bluetooth adapter at a time. If other adapters need Bluetooth too, install the [ble-gateway](https://github.com/ioBroker/ioBroker.ble-gateway) adapter: it owns the bluetooth adapter and shares the received advertisements with all subscribed adapters.
+Enter its instance (e.g. `ble-gateway.0`) in **Use ble-gateway instance**. The local bluetooth adapter and the remote server are not used then; the monitored services and plugins work the same way.
+
 ## Plugin system
 The adapter supports extension via plugins. Those define which advertised services should be listened to and how to translate the data. The plugin structure is defined in https://github.com/AlCalzone/ioBroker.ble/blob/master/src/plugins/plugin.ts and an example of a working plugin is defined here https://github.com/AlCalzone/ioBroker.ble/blob/master/src/plugins/_default.ts
 
@@ -42,6 +46,9 @@ If you have any device transmitting specially encoded information via advertisem
 	Placeholder for next release:
 	### __WORK IN PROGRESS__
 -->
+### __WORK IN PROGRESS__
+* The advertisements can be received through the [ble-gateway](https://github.com/ioBroker/ioBroker.ble-gateway) adapter, so the bluetooth adapter can be shared with other adapters
+
 ### 0.14.1 (2025-02-09)
 * Fixed compatibility issues with newer OS and Node.js versions (#874)
 

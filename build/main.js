@@ -21,6 +21,7 @@ var utils = __toESM(require("@iobroker/adapter-core"));
 var import_objects = require("alcalzone-shared/objects");
 var import_child_process = require("child_process");
 var path = __toESM(require("path"));
+var import_ble_gateway_client = require("./lib/ble-gateway-client");
 var import_global = require("./lib/global");
 var import_iobroker_objects = require("./lib/iobroker-objects");
 var import_object_cache = require("./lib/object-cache");
@@ -47,9 +48,11 @@ const ignoredNewDeviceIDs = /* @__PURE__ */ new Set();
 let rssiUpdateInterval = 0;
 let scanProcess;
 let socket;
+let gatewayClient;
 const adapter = utils.adapter({
   name: "ble",
   ready: async () => {
+    var _a;
     import_global.Global.adapter = adapter;
     import_global.Global.objectCache = new import_object_cache.ObjectCache(6e4);
     await import_global.Global.ensureInstanceObjects();
@@ -84,7 +87,9 @@ const adapter = utils.adapter({
     adapter.subscribeObjects("*");
     await adapter.setStateAsync("options.allowNewDevices", false, true);
     if (!process.env.TESTING) {
-      if (adapter.config.server) {
+      if ((_a = adapter.config.gateway) == null ? void 0 : _a.trim()) {
+        startGatewaySubscription(adapter.config.gateway.trim());
+      } else if (adapter.config.server) {
         connectToBLEServer();
       } else {
         startScanProcess();
@@ -96,6 +101,15 @@ const adapter = utils.adapter({
       scanProcess == null ? void 0 : scanProcess.kill();
     } catch {
     }
+    if (gatewayClient) {
+      const client = gatewayClient;
+      gatewayClient = void 0;
+      void Promise.race([
+        client.destroy().catch(() => void 0),
+        new Promise((resolve) => setTimeout(resolve, 1e3))
+      ]).then(() => callback());
+      return;
+    }
     callback();
   },
   objectChange: (id, obj) => {
@@ -106,6 +120,7 @@ const adapter = utils.adapter({
     }
   },
   stateChange: (id, state) => {
+    gatewayClient == null ? void 0 : gatewayClient.handleStateChange(id, state);
     if (/options\.allowNewDevices$/.test(id) && state != void 0 && !state.ack) {
       if (typeof state.val === "boolean" && state.val !== allowNewDevices) {
         allowNewDevices = state.val;
@@ -121,6 +136,8 @@ const adapter = utils.adapter({
     }
   },
   message: async (obj) => {
+    if (gatewayClient == null ? void 0 : gatewayClient.handleMessage(obj))
+      return;
     function respond(response) {
       if (obj.callback)
         adapter.sendTo(obj.from, obj.command, response, obj.callback);
@@ -211,6 +228,45 @@ function connectToBLEServer() {
     host,
     port: +port
   });
+}
+function startGatewaySubscription(gateway) {
+  adapter.log.info(`receiving BLE advertisements through ${gateway}...`);
+  gatewayClient = new import_ble_gateway_client.BleGatewayClient(adapter, gateway, (connected) => {
+    adapter.setState("info.connection", connected, true);
+    adapter.setState(
+      "info.driverState",
+      connected ? "poweredOn" : "poweredOff",
+      true
+    );
+  });
+  gatewayClient.subscribe(
+    "ble",
+    services.length > 0 ? { serviceUuids: services } : {},
+    (packet) => void onDiscover(packetToPeripheral(packet))
+  ).catch(
+    (e) => adapter.log.warn(`subscribing at ${gateway} failed: ${e.message}`)
+  );
+}
+function packetToPeripheral(packet) {
+  var _a, _b, _c;
+  const id = packet.address.replace(/:/g, "");
+  return {
+    id,
+    uuid: id,
+    address: packet.address,
+    addressType: packet.addressType,
+    connectable: (_a = packet.connectable) != null ? _a : false,
+    advertisement: {
+      localName: packet.localName,
+      txPowerLevel: packet.txPowerLevel,
+      manufacturerData: packet.manufacturerData,
+      serviceData: (_b = packet.serviceData) != null ? _b : [],
+      serviceUuids: (_c = packet.serviceUuids) != null ? _c : []
+    },
+    rssi: packet.rssi,
+    services: [],
+    state: "disconnected"
+  };
 }
 function handleMessage(message) {
   var _a;

@@ -153,6 +153,7 @@
 		"services": "",
 		"hciDevice": 0,
 		"server": "",
+		"gateway": "",
 		"plugins": "",
 		"allowEmptyDevices": false,
 		"rssiThrottle": 0

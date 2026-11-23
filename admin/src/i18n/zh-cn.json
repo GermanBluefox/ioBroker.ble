@@ -11,5 +11,7 @@
 	"Settings": "设置",
 	"Too frequent updates can slow down the admin.": "太频繁地更新可以慢下来的管理。",
 	"This will be automatically disabled after 5 minutes.": "这将在 5 分钟后自动禁用。",
-	"Accept new devices": "接受新设备"
+	"Accept new devices": "接受新设备",
+	"Use ble-gateway instance:": "使用 ble-gateway 实例：",
+	"when configured, the advertisements come from the ble-gateway adapter, which shares one bluetooth adapter with other adapters": "设置后，广播数据来自 ble-gateway 适配器，它与其他适配器共享一个蓝牙适配器"
 }

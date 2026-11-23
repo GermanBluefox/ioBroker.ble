@@ -5,6 +5,8 @@ declare global {
 		interface AdapterConfig {
 			services: string;
 			server: string;
+			/** Instance of the ble-gateway adapter to receive the advertisements from, e.g. "ble-gateway.0" */
+			gateway: string;
 			hciDevice: number;
 			plugins: string;
 			allowEmptyDevices: boolean;

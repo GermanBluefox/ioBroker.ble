@@ -11,5 +11,7 @@
 	"Settings": "Paramètres",
 	"Too frequent updates can slow down the admin.": "Trop de mises à jour fréquentes peuvent ralentir l'admin.",
 	"This will be automatically disabled after 5 minutes.": "Cela sera automatiquement désactivé après 5 minutes.",
-	"Accept new devices": "Accepter de nouveaux appareils"
+	"Accept new devices": "Accepter de nouveaux appareils",
+	"Use ble-gateway instance:": "Utiliser l'instance ble-gateway :",
+	"when configured, the advertisements come from the ble-gateway adapter, which shares one bluetooth adapter with other adapters": "si configuré, les annonces proviennent de l'adaptateur ble-gateway, qui partage un adaptateur Bluetooth avec d'autres adaptateurs"
 }

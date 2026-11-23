@@ -12,5 +12,7 @@
 	"Too frequent updates can slow down the admin.": "Aggiornamenti troppo frequenti possono rallentare l'admin.",
 	"on save adapter restarts with new config immediately": "salva adattatore riavvia con la nuova config immediatamente",
 	"This will be automatically disabled after 5 minutes.": "Questo verrà automaticamente disabilitato dopo 5 minuti.",
-	"Accept new devices": "Accetta nuovi dispositivi"
+	"Accept new devices": "Accetta nuovi dispositivi",
+	"Use ble-gateway instance:": "Usa l'istanza ble-gateway:",
+	"when configured, the advertisements come from the ble-gateway adapter, which shares one bluetooth adapter with other adapters": "se impostato, gli advertising arrivano dall'adattatore ble-gateway, che condivide un adattatore Bluetooth con altri adattatori"
 }

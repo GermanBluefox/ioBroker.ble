@@ -2,6 +2,10 @@ import * as utils from "@iobroker/adapter-core";
 import { entries } from "alcalzone-shared/objects";
 import { exec, fork, type ChildProcess } from "child_process";
 import * as path from "path";
+import {
+	BleGatewayClient,
+	type BleGatewayPacket,
+} from "./lib/ble-gateway-client";
 import { Global as _ } from "./lib/global";
 import {
 	extendChannel,
@@ -54,6 +58,8 @@ let rssiUpdateInterval = 0;
 /** A reference to the scanning process */
 let scanProcess: ChildProcess | undefined;
 let socket: Socket | undefined;
+/** Receives the advertisements from a ble-gateway instance instead of scanning ourselves */
+let gatewayClient: BleGatewayClient | undefined;
 
 // Adapter-Objekt erstellen
 const adapter = utils.adapter({
@@ -123,7 +129,9 @@ const adapter = utils.adapter({
 
 		// And start scanning
 		if (!process.env.TESTING) {
-			if (adapter.config.server) {
+			if (adapter.config.gateway?.trim()) {
+				startGatewaySubscription(adapter.config.gateway.trim());
+			} else if (adapter.config.server) {
 				connectToBLEServer();
 			} else {
 				startScanProcess();
@@ -136,6 +144,17 @@ const adapter = utils.adapter({
 		try {
 			scanProcess?.kill();
 		} catch {}
+		if (gatewayClient) {
+			// Unsubscribe, so the gateway stops forwarding right away. It also
+			// drops our subscription on its own once our alive state is false.
+			const client = gatewayClient;
+			gatewayClient = undefined;
+			void Promise.race([
+				client.destroy().catch(() => undefined),
+				new Promise((resolve) => setTimeout(resolve, 1000)),
+			]).then(() => callback());
+			return;
+		}
 		callback();
 	},
 
@@ -152,6 +171,8 @@ const adapter = utils.adapter({
 
 	// is called if a subscribed state changes
 	stateChange: (id, state) => {
+		// The gateway's alive state: re-subscribes when the gateway restarts
+		gatewayClient?.handleStateChange(id, state);
 		if (
 			/options\.allowNewDevices$/.test(id) &&
 			state != undefined &&
@@ -182,6 +203,8 @@ const adapter = utils.adapter({
 	},
 
 	message: async (obj) => {
+		// Advertisements pushed by the ble-gateway
+		if (gatewayClient?.handleMessage(obj)) return;
 		// responds to the adapter that sent the original message
 		function respond(response: any) {
 			if (obj.callback)
@@ -305,6 +328,53 @@ function connectToBLEServer() {
 		host,
 		port: +port,
 	});
+}
+
+function startGatewaySubscription(gateway: string) {
+	adapter.log.info(`receiving BLE advertisements through ${gateway}...`);
+	gatewayClient = new BleGatewayClient(adapter, gateway, (connected) => {
+		adapter.setState("info.connection", connected, true);
+		// The gateway owns the bluetooth driver; it answers only while it is powered on.
+		adapter.setState(
+			"info.driverState",
+			connected ? "poweredOn" : "poweredOff",
+			true,
+		);
+	});
+	// Same selection as the local scan: the monitored services, or everything.
+	// Like noble, the gateway matches advertised service UUIDs and service data UUIDs.
+	gatewayClient
+		.subscribe(
+			"ble",
+			services.length > 0 ? { serviceUuids: services } : {},
+			(packet) => void onDiscover(packetToPeripheral(packet)),
+		)
+		.catch((e: Error) =>
+			adapter.log.warn(`subscribing at ${gateway} failed: ${e.message}`),
+		);
+}
+
+/** Converts a ble-gateway packet into the shape the scan process delivers */
+function packetToPeripheral(packet: BleGatewayPacket): PeripheralInfo {
+	// noble uses the MAC address without colons as id on Linux
+	const id = packet.address.replace(/:/g, "");
+	return {
+		id,
+		uuid: id,
+		address: packet.address,
+		addressType: packet.addressType as PeripheralInfo["addressType"],
+		connectable: packet.connectable ?? false,
+		advertisement: {
+			localName: packet.localName as string,
+			txPowerLevel: packet.txPowerLevel as number,
+			manufacturerData: packet.manufacturerData as Buffer,
+			serviceData: packet.serviceData ?? [],
+			serviceUuids: packet.serviceUuids ?? [],
+		},
+		rssi: packet.rssi,
+		services: [],
+		state: "disconnected",
+	};
 }
 
 function handleMessage(message: ScanMessage) {
